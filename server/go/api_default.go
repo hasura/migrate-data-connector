@@ -6,6 +6,7 @@
 package swagger
 
 import (
+	"io"
 	"net/http"
 )
 
