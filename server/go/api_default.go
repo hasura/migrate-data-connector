@@ -11,6 +11,48 @@ import (
 
 func CapabilitiesGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+	response := `{
+		"capabilities": {
+		  "queries": {
+			"foreach": {}
+		  },
+		  "data_schema": {
+			"supports_primary_keys": true,
+			"supports_foreign_keys": true,
+			"column_nullability": "nullable_and_non_nullable"
+		  },
+		  "relationships": {},
+		  "scalar_types": {
+			"DateTime": {"comparison_operators": {"DateTime": {"in_year": "Number"}}}
+		  },
+		  "user_defined_functions": {}
+		},
+		"config_schemas": {
+		  "config_schema": {
+			"type": "object",
+			"nullable": false,
+			"properties": {
+			  "tables": { "$ref": "#/other_schemas/Tables" }
+			}
+		  },
+		  "other_schemas": {
+			"Tables": {
+			  "description": "List of tables to make available in the schema and for querying",
+			  "type": "array",
+			  "items": { "$ref": "#/other_schemas/TableName" },
+			  "nullable": true
+			},
+			"TableName": {
+			  "nullable": false,
+			  "type": "string"
+			}
+		  }
+		}
+	}`
+
+	io.WriteString(w, response)
+
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -61,5 +103,77 @@ func RawPost(w http.ResponseWriter, r *http.Request) {
 
 func SchemaGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+	response := `{
+		"tables": [
+		  {
+			"name": ["Artist"],
+			"type": "table",
+			"primary_key": ["ArtistId"],
+			"description": "Collection of artists of music",
+			"columns": [
+			  {
+				"name": "ArtistId",
+				"type": "number",
+				"nullable": false,
+				"description": "Artist primary key identifier",
+				"insertable": true,
+				"updatable": false,
+				"value_generated": { "type": "auto_increment" }
+			  },
+			  {
+				"name": "Name",
+				"type": "string",
+				"nullable": true,
+				"description": "The name of the artist",
+				"insertable": true,
+				"updatable": true
+			  }
+			],
+			"insertable": true,
+			"updatable": true,
+			"deletable": true
+		  },
+		  {
+			"name": ["Album"],
+			"type": "table",
+			"primary_key": ["AlbumId"],
+			"description": "Collection of music albums created by artists",
+			"columns": [
+			  {
+				"name": "AlbumId",
+				"type": "number",
+				"nullable": false,
+				"description": "Album primary key identifier",
+				"insertable": true,
+				"updatable": false,,
+				"value_generated": { "type": "auto_increment" }
+			  },
+			  {
+				"name": "Title",
+				"type": "string",
+				"nullable": false,
+				"description": "The title of the album",
+				"insertable": true,
+				"updatable": true
+			  },
+			  {
+				"name": "ArtistId",
+				"type": "number",
+				"nullable": false,
+				"description": "The ID of the artist that created this album",
+				"insertable": true,
+				"updatable": true
+			  }
+			],
+			"insertable": true,
+			"updatable": true,
+			"deletable": true
+		  }
+		]
+	}`
+
+	io.WriteString(w, response)
+
 	w.WriteHeader(http.StatusOK)
 }
