@@ -147,7 +147,7 @@ func SchemaGet(w http.ResponseWriter, r *http.Request) {
 				"nullable": false,
 				"description": "Album primary key identifier",
 				"insertable": true,
-				"updatable": false,,
+				"updatable": false,
 				"value_generated": { "type": "auto_increment" }
 			  },
 			  {
