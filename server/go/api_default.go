@@ -34,7 +34,15 @@ func CapabilitiesGet(w http.ResponseWriter, r *http.Request) {
 			"type": "object",
 			"nullable": false,
 			"properties": {
-			  "tables": { "$ref": "#/other_schemas/Tables" }
+			  "tables": { "$ref": "#/other_schemas/Tables" },
+			  "PostgreSQL_URL": {
+				  "nullable": false,
+				  "type": "string"
+			  },
+			  "MongoDB_URL": {
+				  "nullable": false,
+				  "type": "string"
+			  }
 			}
 		  },
 		  "other_schemas": {
@@ -47,14 +55,6 @@ func CapabilitiesGet(w http.ResponseWriter, r *http.Request) {
 			"TableName": {
 			  "nullable": false,
 			  "type": "string"
-			},
-			"PostgreSQL_URL": {
-				"nullable": false,
-				"type": "string"
-			},
-			"MongoDB_URL": {
-				"nullable": false,
-				"type": "string"
 			}
 		  }
 		}
