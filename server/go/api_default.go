@@ -201,7 +201,7 @@ func QueryPost(w http.ResponseWriter, r *http.Request) {
 
 	data := ConnectionStrings{}
 
-	err := json.Unmarshal([]byte(val[0]), data)
+	err := json.Unmarshal([]byte(val[0]), &data)
 	if err != nil {
 		fmt.Println(err.Error()) 
 		w.WriteHeader(http.StatusInternalServerError)
