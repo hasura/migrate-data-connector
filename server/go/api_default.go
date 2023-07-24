@@ -48,10 +48,12 @@ func CapabilitiesGet(w http.ResponseWriter, r *http.Request) {
 			  "nullable": false,
 			  "type": "string"
 			},
-			"PostgreSQL URL": {
+			"PostgreSQL_URL": {
+				"nullable": false,
 				"type": "string"
 			},
-			"MongoDB URL": {
+			"MongoDB_URL": {
+				"nullable": false,
 				"type": "string"
 			}
 		  }
