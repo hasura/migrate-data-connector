@@ -102,6 +102,13 @@ func MutationPost(w http.ResponseWriter, r *http.Request) {
 
 func QueryPost(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+	for name, values := range r.Header
+		for _, value := range values {
+			fmt.Println(name, value)
+		}
+	}
+
 	w.WriteHeader(http.StatusOK)
 }
 
