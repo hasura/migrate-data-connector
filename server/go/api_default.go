@@ -6,10 +6,98 @@
 package swagger
 
 import (
+	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"io"
+	"encoding/json"
 	"net/http"
+	"time"
+
+	_ "github.com/lib/pq"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+type ConnectionStrings struct {
+	PostgreSQL_URL	string
+	MongoDB_URL	string
+}
+
+type Artist struct {
+	ArtistId int
+	Name	string
+}
+
+func queryArtistByIdFromPostgreSQL(connStr, artistId string) error {
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+			return err
+	}
+	defer db.Close()
+
+	row := db.QueryRow("SELECT * FROM Artist WHERE ArtistId = $1", artistId)
+	artist := Artist{}
+	err = row.Scan(artist)
+	if err != nil {
+			return err
+	}
+
+	return nil
+}
+
+func insertArtistInPostgresSQL(connStr, name string) error {
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+			return err
+	}
+	defer db.Close()
+
+	sStmt := "INSERT INTO Artist (name) VALUES ($1)"
+	stmt, err := db.Prepare(sStmt)
+	if err != nil {
+			return err
+	}
+	defer stmt.Close()
+
+	res, err := stmt.Exec(name)
+	if err != nil {
+			return err
+	}
+	if res == nil {
+			// what to say? error?
+			return errors.New("response can't be nil")
+	}
+	
+	id, err := res.LastInsertId()
+	if err != nil {
+		return err
+	}
+	fmt.Println("last inserted id in PostgreSQL", id)
+
+	return nil
+}
+
+func insertArtistInMongoDB(connStr, name string, artistId int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(connStr))
+	defer func() {
+			if err = client.Disconnect(ctx); err != nil {
+					fmt.Println("error in disconnecting from MongoDB: ", err)
+			}
+	}()
+	collection := client.Database("chinook").Collection("artist")
+	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_, err = collection.InsertOne(ctx, bson.D{{"Name", name}, {"ArtistId", artistId}})
+	if err != nil {
+			return err
+	}
+	return nil
+}
 
 func CapabilitiesGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -104,11 +192,31 @@ func MutationPost(w http.ResponseWriter, r *http.Request) {
 func QueryPost(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-	for name, values := range r.Header {
-		for _, value := range values {
-			fmt.Println(name, value)
-		}
+	val, ok := r.Header["X-Hasura-Dataconnector-Config"]
+	if !ok {
+		fmt.Println("X-Hasura-Dataconnector-Config not found in headers")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
+
+	data := ConnectionStrings{}
+
+	err := json.Unmarshal([]byte(val[0]), data)
+	if err != nil {
+		fmt.Println(err.Error()) 
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Println("connection strings: ", data)
+
+	b, err := io.ReadAll(r.Body)
+	if err != nil {
+		fmt.Println(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	fmt.Println("request body: ", string(b))
 
 	w.WriteHeader(http.StatusOK)
 }
