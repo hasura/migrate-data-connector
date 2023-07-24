@@ -1,7 +1,9 @@
-FROM golang:1.10 AS build
+FROM golang:1.20 AS build
 WORKDIR /go/src
 COPY server/go ./go
 COPY server/main.go .
+COPY server/go.mod .
+COPY server/go.sum .
 
 ENV CGO_ENABLED=0
 RUN go get -d -v ./...
